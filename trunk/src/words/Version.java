@@ -32,12 +32,10 @@ public class Version {
     public static final boolean STABLE = false;
 
     public static void main(String [] args) {
-        System.out.println("words.TOOLKIT");
-        System.out.println("=============");
-        System.out.println("");
+        System.out.print("words.TOOLKIT");
         if(STABLE)
-            System.out.println("Version number: "+VERSION);
-        else
-            System.out.println("Build ID: "+BUILD);
+            System.out.print(" v. "+VERSION);
+        
+        System.out.println(" (build ID: "+BUILD+")");
     }
 }
