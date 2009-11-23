@@ -4,7 +4,7 @@
  * Authors:
  *  Enrique Benimeli Bofarull <ebenimeli@gmail.com>
  *  David Ortega Parilla <dortegaparrilla@gmail.com>
- *  Xavier Ivars i Ribes <xavi@infobenissa.com>
+ *  Xavier Ivars i Ribes <xavi.ivars@gmail.com>
  *  
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

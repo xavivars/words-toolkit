@@ -2,7 +2,7 @@
  * Copyright (C) 2008
  *
  * Author:
- *  Xavier Ivars i Ribes <xavi@infobenissa.com>
+ *  Xavier Ivars i Ribes <xavi.ivars@gmail.com>
  * 
  * Based on Hyphenator class from Rafael C. Carrasco.
  *

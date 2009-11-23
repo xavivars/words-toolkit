@@ -1,12 +1,8 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-/*
  * Copyright (C) 2008
  *
  * Author:
- *  Xavier Ivars i Ribes <xavi@infobenissa.com>
+ *  Xavier Ivars i Ribes <xavi.ivars@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

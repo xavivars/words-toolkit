@@ -2,7 +2,7 @@
  * Copyright (C) 2009
  *
  * Author:
- *  Xavier Ivars i Ribes <xavi@infobenissa.com>
+ *  Xavier Ivars i Ribes <xavi.ivars@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
