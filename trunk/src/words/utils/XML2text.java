@@ -100,30 +100,4 @@ class XML2text extends DefaultHandler {
         }
         return buffer.toString();
     }
-
-    public static void main(String[] args) throws IOException {
-        XML2text xml = new XML2text();
-        String text;
-        if (args.length < 2) {
-            System.err.println("usage: java XML2text yes|no file1.xml file2.xml...");
-            args = new String[2];
-            args[1]="/home/xavi/Documents/tesina/error/ocr/13042/produccion/7_10_2004_10_39_28_noelia_013042.xml";
-            args[0]="no";
-        }
-        if (args[0].equalsIgnoreCase("no")) {
-            xml.showHeader = false;
-        }
-        String [] files = new String[args.length-1];
-        
-        for(int i=1;i<args.length;++i)
-            files[i-1]=args[i];
-
-        for (String fileName : files) {
-            // Obtenemos el .txt y lo sacamos por pantalla (al pretender escribir sobre fichero
-            // fallaba porque no escribía todo).
-
-            text = xml.getText(fileName);
-            System.out.println(text);
-        }
-    }
 }
