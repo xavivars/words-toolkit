@@ -15,7 +15,7 @@
    version="1.1"
    inkscape:version="0.47pre4 r22446"
    sodipodi:docname="wtk.svg"
-   inkscape:export-filename="/home/xavi/src/wtk/wtk.png"
+   inkscape:export-filename="/home/xavi/src/words-toolkit/media/wtk.png"
    inkscape:export-xdpi="513.70001"
    inkscape:export-ydpi="513.70001">
   <defs
@@ -43,7 +43,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.959798"
-     inkscape:cx="223.93252"
+     inkscape:cx="219.5131"
      inkscape:cy="756.86147"
      inkscape:document-units="px"
      inkscape:current-layer="capa1"
@@ -52,7 +52,8 @@
      inkscape:window-height="974"
      inkscape:window-x="0"
      inkscape:window-y="25"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     inkscape:snap-to-guides="false" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -90,7 +91,7 @@
          id="tspan2830"
          x="201.03648"
          y="266.91473"
-         style="fill:#ff6600">wTK</tspan></text>
+         style="fill:#ff8200;fill-opacity:1">wTK</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
