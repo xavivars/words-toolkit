@@ -1,10 +1,10 @@
 package words.utils;
 
 
-import java.io.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 import javax.xml.parsers.*;
+import words.utils.CmdOptions.*;
 
 /**
  * 
@@ -15,9 +15,36 @@ class XML2text extends DefaultHandler {
 
     StringBuilder buffer = new StringBuilder(10000);
 
-    private boolean nota = false; // útil para eliminar las notas del TXT final.
-    private boolean showHeader = true; // útil per a mostrar/ocultar les capçaleres
+    private boolean showNote = false; // útil para eliminar las notas del TXT final.
+    private boolean inNote = false;
+    private boolean showHeader = false; // útil per a mostrar/ocultar les capçaleres
     private boolean inHeader = false;
+
+    public static void main(String [] args) {
+        new XML2text(args);
+    }
+
+    public XML2text(String [] args) {
+        CmdOptions parser = new CmdOptions();
+        CmdOptionTester optionTester = new CmdOptionTester();
+
+        Option file = parser.addStringOption('f', "file");
+        Option note = parser.addBooleanOption('n', "note");
+        Option header = parser.addBooleanOption('h', "header");
+        
+        try {
+            parser.parse(args);
+
+            showNote = optionTester.testBoolean(parser, note);
+            showHeader = optionTester.testBoolean(parser, header);
+            String f = optionTester.testFile(parser, file, false, true, true);
+
+            System.out.print(this.getText(f));
+            
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
 
     @Override
     public void characters(char[] c, int start, int length) {
@@ -25,7 +52,7 @@ class XML2text extends DefaultHandler {
             boolean wr = true;
             try {
                 // Si no estamos en una etiqueta "note" añadimos el contenido a buffer.
-                if (nota) {
+                if (inNote && !showNote) {
                     wr = false;
                 }
                 if (inHeader && !showHeader) {
@@ -45,10 +72,11 @@ class XML2text extends DefaultHandler {
     public void startElement(String uri, String localName,
             String tag, Attributes attributes) {
         if (tag.equals("note")) {
-            nota = true;
-        }
-        if(!nota)
+            inNote = true;
+        } /* else {
             buffer.append(" ");
+        } */
+            
         // Si nos encontramos con la etiqueta "teiHeader" significa que comenzamos con
         // la cabecera del documento XML y por tanto lo marcamos para saber en el texto llano
         // donde comienza dicha cabecera.
@@ -73,10 +101,9 @@ class XML2text extends DefaultHandler {
         }
         // Ya no estamos en una etiqueta "note".
         if (tag.equals("note")) {
-            nota = false;
+            inNote = false;
+            /* buffer.append(" "); */
         }
-        if(!nota)
-            buffer.append(" ");
     }
 
     private XMLReader getXMLReader() {

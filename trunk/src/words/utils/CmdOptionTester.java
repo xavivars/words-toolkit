@@ -349,8 +349,40 @@ public class CmdOptionTester {
         return vlmcValue;
     }
 
+    public String testFile(CmdOptions parser, Option opt,  boolean force, boolean read, boolean oblig) {
+        String ret = (String) parser.getOptionValue(opt);
+
+        if (ret == null) {
+            if (oblig) {
+                System.err.println("BAD USAGE. file must be defined: {-f | --file} file");
+                System.exit(0);
+            } else {
+                return null;
+            }
+        }
+
+        boolean cpok = true;
+
+        File cpfile = new File(ret);
+        if (!cpfile.exists()) {
+            cpok = false;
+        }
+
+        if (read) {
+            if (!cpok) {
+                System.err.println("BAD USAGE. file must be an existing file [" + ret + "]");
+                System.exit(0);
+            }
+        } else {
+            if (cpok && !force) {
+                ret = null;
+            }
+        }
+        return ret;
+    }
+
     public String testFile(CmdOptions parser, Option opt) {
-        return (String) parser.getOptionValue(opt);
+        return testFile(parser,opt,false,false,false);
     }
 
     public boolean testBoolean(CmdOptions parser, Option opt) {
