@@ -1,6 +1,5 @@
 package words.utils;
 
-
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 import javax.xml.parsers.*;
@@ -14,24 +13,25 @@ import words.utils.CmdOptions.*;
 class XML2text extends DefaultHandler {
 
     StringBuilder buffer = new StringBuilder(10000);
-
     private boolean showNote = false; // útil para eliminar las notas del TXT final.
     private boolean inNote = false;
     private boolean showHeader = false; // útil per a mostrar/ocultar les capçaleres
     private boolean inHeader = false;
+    private boolean inDocEdition = false;
+    private boolean inForeign = false;
 
-    public static void main(String [] args) {
+    public static void main(String[] args) {
         new XML2text(args);
     }
 
-    public XML2text(String [] args) {
+    public XML2text(String[] args) {
         CmdOptions parser = new CmdOptions();
         CmdOptionTester optionTester = new CmdOptionTester();
 
         Option file = parser.addStringOption('f', "file");
         Option note = parser.addBooleanOption('n', "note");
         Option header = parser.addBooleanOption('h', "header");
-        
+
         try {
             parser.parse(args);
 
@@ -40,7 +40,7 @@ class XML2text extends DefaultHandler {
             String f = optionTester.testFile(parser, file, false, true, true);
 
             System.out.print(this.getText(f));
-            
+
         } catch (Exception e) {
             System.err.println(e);
         }
@@ -58,6 +58,13 @@ class XML2text extends DefaultHandler {
                 if (inHeader && !showHeader) {
                     wr = false;
                 }
+                if (inForeign) {
+                    wr = false;
+                }
+                if (inDocEdition) {
+                    wr = false;
+                }
+
                 if (wr) {
                     buffer.append(c, start, length);
                 }
@@ -69,22 +76,24 @@ class XML2text extends DefaultHandler {
     }
 
     @Override
-    public void startElement(String uri, String localName,
-            String tag, Attributes attributes) {
-        if (tag.equals("note")) {
-            inNote = true;
-        } /* else {
-            buffer.append(" ");
-        } */
-            
-        // Si nos encontramos con la etiqueta "teiHeader" significa que comenzamos con
-        // la cabecera del documento XML y por tanto lo marcamos para saber en el texto llano
-        // donde comienza dicha cabecera.
+    public void startElement(String uri, String localName, String tag, Attributes attributes) {
         if (tag.equals("teiHeader")) {
             inHeader = true;
-            if (showHeader)
+            if (showHeader) {
                 buffer.append(" _CABECERA_INICIAL_ ");
-        // Comienzo de una etiqueta "note". Por tanto ponemos nota = true para saberlo en characters.
+            }
+        }
+
+        if (tag.equals("note")) {
+            inNote = true;
+        }
+
+        if (tag.equals("docEdition")) {
+            inDocEdition = true;
+        }
+
+        if(tag.equals("foreign")) {
+            inForeign = true;
         }
     }
 
@@ -94,15 +103,25 @@ class XML2text extends DefaultHandler {
         // colocamos una marca. De esta forma luego podemos eliminar el contenido de la cabecera en
         // el fichero llano.
         if (tag.equals("teiHeader")) {
-            if (showHeader)
+            if (showHeader) {
                 buffer.append(" \\_CABECERA_INICIAL_ ");
+            }
             inHeader = false;
-        
+
         }
+
+        if (tag.equals("docEdition")) {
+            inDocEdition = false;
+        }
+
         // Ya no estamos en una etiqueta "note".
         if (tag.equals("note")) {
             inNote = false;
             /* buffer.append(" "); */
+        }
+
+        if(tag.equals("p") || tag.equals("head")) {
+            buffer.append("\n\n");
         }
     }
 
@@ -122,8 +141,8 @@ class XML2text extends DefaultHandler {
         try {
             reader.parse(fileName);
         } catch (Exception x) {
-            System.err.println("Error parsing " + fileName +
-                    ": " + x.getMessage());
+            System.err.println("Error parsing " + fileName
+                    + ": " + x.getMessage());
         }
         return buffer.toString();
     }
