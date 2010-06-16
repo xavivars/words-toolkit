@@ -114,6 +114,10 @@ class XML2text extends DefaultHandler {
             inDocEdition = false;
         }
 
+        if(tag.equals("foreign")) {
+            inForeign = false;
+        }
+
         // Ya no estamos en una etiqueta "note".
         if (tag.equals("note")) {
             inNote = false;
