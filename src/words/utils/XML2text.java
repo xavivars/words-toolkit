@@ -1,5 +1,7 @@
 package words.utils;
 
+import java.util.Arrays;
+import java.util.List;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 import javax.xml.parsers.*;
@@ -19,6 +21,9 @@ class XML2text extends DefaultHandler {
     private boolean inHeader = false;
     private boolean inDocEdition = false;
     private boolean inForeign = false;
+    private boolean inAbbr = false;
+    private StringBuilder abbrContent = null;
+    private List<String> newline;
 
     public static void main(String[] args) {
         new XML2text(args);
@@ -31,6 +36,9 @@ class XML2text extends DefaultHandler {
         Option file = parser.addStringOption('f', "file");
         Option note = parser.addBooleanOption('n', "note");
         Option header = parser.addBooleanOption('h', "header");
+
+        String [] ar = {"p","abbr","header","docAuthor","speaker"};
+        newline = Arrays.asList(ar);
 
         try {
             parser.parse(args);
@@ -59,9 +67,17 @@ class XML2text extends DefaultHandler {
                     wr = false;
                 }
                 if (inForeign) {
-                    wr = false;
+                    //wr = false;
                 }
                 if (inDocEdition) {
+                    wr = false;
+                }
+
+                if(inAbbr) {
+                    if(abbrContent == null)
+                        abbrContent = new StringBuilder();
+
+                    abbrContent.append(c,start,length);
                     wr = false;
                 }
 
@@ -95,6 +111,10 @@ class XML2text extends DefaultHandler {
         if(tag.equals("foreign")) {
             inForeign = true;
         }
+
+        if(tag.equals("abbr")) {
+            inAbbr = true;
+        }
     }
 
     @Override
@@ -124,7 +144,13 @@ class XML2text extends DefaultHandler {
             /* buffer.append(" "); */
         }
 
-        if(tag.equals("p") || tag.equals("head")) {
+        if(tag.equals("abbr")) {
+            buffer.append(abbrContent.toString());
+            abbrContent = null;
+            inAbbr = false;
+        }
+
+        if(newline.contains(tag)) {
             buffer.append("\n\n");
         }
     }
