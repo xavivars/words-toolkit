@@ -352,6 +352,9 @@ public class CmdOptionTester {
     public String testFile(CmdOptions parser, Option opt,  boolean force, boolean read, boolean oblig) {
         String ret = (String) parser.getOptionValue(opt);
 
+        if(ret.equalsIgnoreCase("-"))
+            return ret;
+
         if (ret == null) {
             if (oblig) {
                 System.err.println("BAD USAGE. file must be defined: {-f | --file} file");
