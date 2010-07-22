@@ -81,6 +81,14 @@ public class TextScanner {
         reader = new BufferedReader(new FileReader(file));
     }
 
+    /**
+     * Constructs a new TextScanner for a particular reader
+     * @param rd
+     */
+    public TextScanner(BufferedReader rd) {
+        reader = rd;
+    }
+
     public Pair<String, Type> nextTypedWord() throws IOException {
         Pair<String, Type> res = null;
         while (res == null) {

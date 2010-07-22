@@ -24,6 +24,7 @@ class XML2text extends DefaultHandler {
     private boolean inAbbr = false;
     private StringBuilder abbrContent = null;
     private List<String> newline;
+    private List<String> dot;
 
     public static void main(String[] args) {
         new XML2text(args);
@@ -37,8 +38,10 @@ class XML2text extends DefaultHandler {
         Option note = parser.addBooleanOption('n', "note");
         Option header = parser.addBooleanOption('h', "header");
 
-        String [] ar = {"p","abbr","header","docAuthor","speaker"};
-        newline = Arrays.asList(ar);
+        String [] ar_n = {"p","abbr","header","docAuthor","speaker"};
+        String [] ar_d = {"head"};
+        newline = Arrays.asList(ar_n);
+        dot = Arrays.asList(ar_d);
 
         try {
             parser.parse(args);
@@ -104,7 +107,7 @@ class XML2text extends DefaultHandler {
             inNote = true;
         }
 
-        if (tag.equals("docEdition")) {
+        if (tag.equals("docEdition") || tag.equals("front")) {
             inDocEdition = true;
         }
 
@@ -130,7 +133,7 @@ class XML2text extends DefaultHandler {
 
         }
 
-        if (tag.equals("docEdition")) {
+        if (tag.equals("docEdition") || tag.equals("front")) {
             inDocEdition = false;
         }
 
@@ -153,6 +156,10 @@ class XML2text extends DefaultHandler {
         if(newline.contains(tag)) {
             buffer.append("\n\n");
         }
+
+        if(dot.contains(tag)) {
+            buffer.append(".\n\n");
+        }
     }
 
     private XMLReader getXMLReader() {
@@ -169,7 +176,10 @@ class XML2text extends DefaultHandler {
     public String getText(String fileName) {
         XMLReader reader = getXMLReader();
         try {
-            reader.parse(fileName);
+            if(fileName.equalsIgnoreCase("-"))
+                reader.parse(new InputSource(System.in));
+            else
+                reader.parse(fileName);
         } catch (Exception x) {
             System.err.println("Error parsing " + fileName
                     + ": " + x.getMessage());
