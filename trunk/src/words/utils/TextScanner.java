@@ -89,12 +89,17 @@ public class TextScanner {
         reader = rd;
     }
 
+    public TextScanner() {
+        reader = new BufferedReader(new InputStreamReader(System.in));
+    }
+
     public Pair<String, Type> nextTypedWord() throws IOException {
         Pair<String, Type> res = null;
         while (res == null) {
             if (buffer == null || pos == buffer.length) {
-                if (reader.ready()) {
-                    String line = reader.readLine().trim();
+                String line = reader.readLine();
+                if (line != null) {
+                    line = line.trim();
                     if (line.length() > 0) {
                         pos = 0;
                         buffer = space.split(" " + line + " ", 0);
@@ -131,8 +136,9 @@ public class TextScanner {
         String res = null;
         while (res == null) {
             if (buffer == null || pos == buffer.length) {
-                if (reader.ready()) {
-                    String line = reader.readLine().trim();
+                String line = reader.readLine();
+                if (line != null) {
+                    line = line.trim();
                     if (line.length() > 0) {
                         pos = 0;
                         buffer = space.split(" " + line + " ", 0);
@@ -168,15 +174,16 @@ public class TextScanner {
      */
     public static void main(String[] args) throws IOException {
         TextScanner scanner;
-        Pair<String,Type> wd;
+        Pair<String, Type> wd;
 
         if (args.length > 0) {
             for (String arg : args) {
                 System.err.print("\r" + arg);
                 scanner = new TextScanner(new File(arg));
                 while ((wd = scanner.nextTypedWord()) != null) {
-                    if(wd.getSecond()==Type.Word)
+                    if (wd.getSecond() == Type.Word) {
                         System.out.println(wd.getFirst());
+                    }
                 }
             }
         } else {
