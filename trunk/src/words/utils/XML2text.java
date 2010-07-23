@@ -38,8 +38,8 @@ class XML2text extends DefaultHandler {
         Option note = parser.addBooleanOption('n', "note");
         Option header = parser.addBooleanOption('h', "header");
 
-        String [] ar_n = {"p","abbr","header","docAuthor","speaker"};
-        String [] ar_d = {"head"};
+        String[] ar_n = {"p", "abbr", "header", "docAuthor", "speaker"};
+        String[] ar_d = {"head"};
         newline = Arrays.asList(ar_n);
         dot = Arrays.asList(ar_d);
 
@@ -76,11 +76,12 @@ class XML2text extends DefaultHandler {
                     wr = false;
                 }
 
-                if(inAbbr) {
-                    if(abbrContent == null)
+                if (inAbbr && wr) {
+                    if (abbrContent == null) {
                         abbrContent = new StringBuilder();
+                    }
 
-                    abbrContent.append(c,start,length);
+                    abbrContent.append(c, start, length);
                     wr = false;
                 }
 
@@ -111,17 +112,27 @@ class XML2text extends DefaultHandler {
             inDocEdition = true;
         }
 
-        if(tag.equals("foreign")) {
+        if (tag.equals("foreign")) {
             inForeign = true;
         }
 
-        if(tag.equals("abbr")) {
+        if (tag.equals("abbr")) {
             inAbbr = true;
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String tag) {
+        if (!(inDocEdition)) {
+            if (newline.contains(tag)) {
+                buffer.append("\n\n");
+            }
+
+            if (dot.contains(tag)) {
+                buffer.append(".\n\n");
+            }
+        }
+
         // Para saber donde termina la cabecera del documento XML en el fichero de texto llano
         // colocamos una marca. De esta forma luego podemos eliminar el contenido de la cabecera en
         // el fichero llano.
@@ -137,7 +148,7 @@ class XML2text extends DefaultHandler {
             inDocEdition = false;
         }
 
-        if(tag.equals("foreign")) {
+        if (tag.equals("foreign")) {
             inForeign = false;
         }
 
@@ -147,18 +158,12 @@ class XML2text extends DefaultHandler {
             /* buffer.append(" "); */
         }
 
-        if(tag.equals("abbr")) {
-            buffer.append(abbrContent.toString());
-            abbrContent = null;
+        if (tag.equals("abbr")) {
             inAbbr = false;
-        }
-
-        if(newline.contains(tag)) {
-            buffer.append("\n\n");
-        }
-
-        if(dot.contains(tag)) {
-            buffer.append(".\n\n");
+            if(abbrContent != null) {
+                buffer.append(abbrContent.toString());
+                abbrContent = null;
+            }
         }
     }
 
@@ -176,13 +181,15 @@ class XML2text extends DefaultHandler {
     public String getText(String fileName) {
         XMLReader reader = getXMLReader();
         try {
-            if(fileName.equalsIgnoreCase("-"))
+            if (fileName.equalsIgnoreCase("-")) {
                 reader.parse(new InputSource(System.in));
-            else
+            } else {
                 reader.parse(fileName);
+            }
         } catch (Exception x) {
             System.err.println("Error parsing " + fileName
                     + ": " + x.getMessage());
+            x.printStackTrace();
         }
         return buffer.toString();
     }
