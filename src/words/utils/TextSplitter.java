@@ -5,8 +5,6 @@
 
 package words.utils;
 
-import java.util.regex.Pattern;
-
 /**
  *
  * @author xavi
