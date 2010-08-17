@@ -25,6 +25,7 @@
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -154,13 +155,10 @@ public class State {
     }
 
     public void repair() {
-        for(Character c : restart.keySet()) {
-            if(restart.getValue(c)==0) {
-                restart.addValue(c, EPSILON);
-                this.times += EPSILON;
-            }
-        }
-        for(Character c : next.keySet()) {
+        Set<Character> bag = new HashSet(restart.keySet());
+        bag.addAll(next.keySet());
+        
+        for(Character c : bag) {
             if(restart.getValue(c)==0) {
                 restart.addValue(c, EPSILON);
                 this.times += EPSILON;
