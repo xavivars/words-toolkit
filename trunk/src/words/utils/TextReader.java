@@ -8,14 +8,14 @@ import java.io.*;
  */
 public class TextReader {
 
-    private BufferedReader reader;// The input reader
-    private Matcher matcher;      // Pattern matcher  
-    private Pattern pattern;      // A regular expression patttern 
+    protected BufferedReader reader;// The input reader
+    protected Matcher matcher;      // Pattern matcher
+    protected Pattern pattern;      // A regular expression patttern
 
     /**
      * Open a file as reader
      */
-    private BufferedReader open(String fileName) {
+    protected BufferedReader open(String fileName) {
         String encoding = System.getProperty("file.encoding");
 
         try {
@@ -44,6 +44,9 @@ public class TextReader {
      */
     public TextReader(String fileName, WordType type) {
         switch (type) {
+            case CATALAN:
+                pattern = Pattern.compile("([\\p{L}]+([-\\'][\\p{L}]+)*)|([^\\p{L}-\\']*)");
+                break;
             case LETTERS:
                 pattern = Pattern.compile("([\\p{L}]+)|([^\\p{L}]*)");
                 break;

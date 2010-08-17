@@ -225,8 +225,8 @@ public class HMMPre extends Model {
     @Override
     public void train(String filename) {
         super.train(filename);
-        retrain(filename,DEFAULT_ITERATIONS);
-        clean();
+        //retrain(filename,DEFAULT_ITERATIONS);
+        //clean();
     }
 
     public double logLikelihood(String fileName, double base) {
