@@ -81,7 +81,7 @@ public abstract class Model extends SAXReader {
     public void train(String filename, boolean verb) {
         if (verb) {
             try {
-                TextReader scanner = new TextReader(filename, WordType.LETTERS);
+                TextReader scanner = new TextReader(filename, WordType.CATALAN);
                 String word;
                 int i = 0;
                
@@ -108,7 +108,7 @@ public abstract class Model extends SAXReader {
      */
     public void train(String filename) {
         try {
-            TextReader scanner = new TextReader(filename, WordType.LETTERS);
+            TextReader scanner = new TextReader(filename, WordType.CATALAN);
             String word;
 
             while ((word = scanner.nextWord()) != null) {

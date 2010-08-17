@@ -28,5 +28,5 @@ package words.utils;
 public enum WordType {
 
     LETTERS, LETTERSorHYPH, LETTERSorDIGITS,
-    LETTERSorDIGITSorPUNCT
+    LETTERSorDIGITSorPUNCT, CATALAN
 };

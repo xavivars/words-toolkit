@@ -26,8 +26,6 @@ import java.io.*;
 import words.utils.*;
 import words.hmm.*;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import words.utils.CmdOptions.IllegalOptionValueException;
@@ -71,8 +69,13 @@ public class HMM extends HMMPre {
         //double weight = Math.pow(2, len - 1);
         // normalitzem per a totes les paraules
         //weight = weight / Math.pow(2,len);
+        // weight = 2^(len-1) / 2^(len) = 2^(len-1-len) = 2^(-1) = 1/2
         double weight = 0.5 * t;
 
+
+        int max_len = len;
+        if(this.length>0)
+            max_len = Math.min(len,this.length);
 
         // hi ha 2^(len-1) * (len+2) segments possibles
         I.addTimes(weight * (len + 2));
@@ -80,7 +83,8 @@ public class HMM extends HMMPre {
         for (int i = 0; i < len; ++i) {
             State q = I;
             double w = (i == 0) ? 2 * weight : weight;
-            for (int j = i; j < len; ++j) {
+            int j = i;
+            for (; j < max_len; ++j) {
                 Character c = word.charAt(j);
                 w *= 0.5;
                 q.addRestart(c, w);
@@ -89,7 +93,10 @@ public class HMM extends HMMPre {
                 q.setName(aux + c);
                 q.addTimes(w);
             }
-            q.addRestart(EOW, w);
+            if(max_len < len)
+                q.addRestart(word.charAt(j), w);
+            else
+                q.addRestart(EOW, w);
         }
     }
 
@@ -320,6 +327,8 @@ public class HMM extends HMMPre {
             Option ototal = parser.addBooleanOption('t',"total");
             // show split
             Option osplit = parser.addBooleanOption('s',"split");
+            // max length (equal n-gram)
+            Option olength = parser.addIntegerOption('l',"length");
 
             // help
             Option help = parser.addBooleanOption('?',"help");
@@ -338,8 +347,9 @@ public class HMM extends HMMPre {
                 String dict = optionTester.testDict(parser, odictionary, false, true, true);
                 String hmmf = optionTester.testHMM(parser, ohmm, force, false, true);
                 int iters = optionTester.testInteger(parser, oiters, 3);
+                int length = optionTester.testInteger(parser, olength, -1);
 
-                hmm = new HMM();
+                hmm = new HMM(length);
                 hmm.train(corpus);
 
                 hmm.retrain(corpus,iters);
@@ -424,7 +434,7 @@ public class HMM extends HMMPre {
                 }
             }
             if(action == Action.SIZE) {
-                String hmmf = optionTester.testNgram(parser, ohmm, false, true, true);
+                String hmmf = optionTester.testHMM(parser, ohmm, false, true, true);
 	            
                 hmm = new HMM();
                 hmm.load(hmmf);
@@ -432,7 +442,7 @@ public class HMM extends HMMPre {
                 System.out.println("Model size: "+hmm.getSize());
             }
             if(action == Action.ORDER) {
-                String hmmf = optionTester.testNgram(parser, ohmm, false, true, true);
+                String hmmf = optionTester.testHMM(parser, ohmm, false, true, true);
 
                 hmm = new HMM();
                 hmm.load(hmmf);
