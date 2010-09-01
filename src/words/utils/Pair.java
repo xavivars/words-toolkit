@@ -19,13 +19,38 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 package words.utils;
 
 public class Pair<T, U> {
 
     private final T first;
     private final U second;
+    private volatile int hashCode = 0;
+
+    public int hashCode () {
+        final int multiplier = 23;
+        if (hashCode == 0) {
+            int code = 133;
+            code = multiplier * code + first.hashCode();
+            code = multiplier * code + second.hashCode();
+            hashCode = code;
+        }
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Pair)) {
+            return false;
+        }
+
+        Pair p = (Pair) obj;
+        return (this.first == p.first && this.second == p.second);
+    }
 
     public Pair(T first, U second) {
         this.first = first;
