@@ -563,7 +563,8 @@ public class Ngram extends Model {
                     while ((word = txreader.nextWord()) != null) {
                         if(!calculat.contains(word)) {
                             calculat.add(word);
-                            cls.add(word,ngram.wordProb(word)*(word.length()+1));
+                            //cls.add(word,ngram.wordProb(word)*(word.length()+1));
+                            cls.add(word,Math.pow(ngram.wordProb(word),1.0/(word.length()+1)));
                         }
                     }
                     ngram.printRanking(cls);

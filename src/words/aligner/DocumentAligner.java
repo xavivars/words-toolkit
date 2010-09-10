@@ -9,11 +9,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
 import java.util.TreeSet;
+import org.apache.commons.collections.HashBag;
 import words.utils.Pair;
 import words.utils.StopWords;
 
@@ -34,7 +36,6 @@ public class DocumentAligner {
     private static int MELDING = 440;
     private static int CONTRACTION = 230;
     private static int EXPANSION = 230;
-
     private static int BIG_DISTANCE = 5000;
 
     public DocumentAligner(String file) throws IOException {
@@ -73,7 +74,7 @@ public class DocumentAligner {
                     document = new Document(1);
                 }
 
-                if(line.isEmpty()) {
+                if (line.isEmpty()) {
                     line = reader.readLine();
                     continue;
                 }
@@ -130,37 +131,117 @@ public class DocumentAligner {
 
         System.out.println("Gale&Church");
         da.paragraphDistance(false);
-        da.showAlignments();
+        da.showBestAlignments();
+        da.showAlignments("1-1,2-2,3-3,4-3,5-5", false, false);
 
         System.out.println("Custom distance");
         da.paragraphDistance(true);
-        da.showAlignments();
+        da.showBestAlignments();
+        da.showAlignments("1-1,2-2,3-3,4-3,5-5", true, false);
     }
 
     public void showParagraphs() {
-        for(Document d : documents) {
+        for (Document d : documents) {
             int i = 0;
-            System.out.println("Document "+ d.getId());
-            for(FingerPrint p : d.paragraphs) {
-                System.out.println(""+(++i)+": "+p);
+            System.out.println("Document " + d.getId());
+            for (FingerPrint p : d.paragraphs) {
+                System.out.println("" + (++i) + ": " + p);
             }
         }
     }
 
-    public void showAlignments() {
-        int cl = -1; int cr = -1;
+    public void showAlignments(String path, boolean custom, boolean log) {
+
+        FingerPrint p1 = null, p2 = null, p3 = null, p4 = null;
+        int cl = 0, cr = 0, pl = 0, pr = 0;
+        int dmin = Integer.MAX_VALUE;
+        int i = 0, j = 0;
+        int total = 0;
+
+        Document d1 = documents.get(0);
+        Document d2 = documents.get(1);
+
+        paragraph_distances = new Distances();
+        paragraph_alignments = new ArrayList<Alignment>();
+        for (i = -1; i < d1.paragraphs.size(); ++i) {
+            for (j = -1; j < d2.paragraphs.size(); ++j) {
+                if (i <= 0 || j <= 0) {
+                    paragraph_distances.set(i, j, 0);
+                }
+            }
+        }
+
+        String[] steps = path.split(",");
+
+        for (String step : steps) {
+            String[] parts = step.split("-");
+            cl = Integer.parseInt(parts[0]);
+            cr = Integer.parseInt(parts[1]);
+
+            i = cl;
+            j = cr;
+
+            int di = i - pl;
+            int dj = j - pr;
+
+            if (di == 1) {
+                p1 = d1.paragraphs.get(i - 1);
+            } else if (di == 2) {
+                p1 = d1.paragraphs.get(i - 2).dup().add(d1.paragraphs.get(i - 1));
+            } else {
+                p1 = null;
+            }
+
+            if (dj == 1) {
+                p2 = d2.paragraphs.get(j - 1);
+            } else if (dj == 2) {
+                p2 = d2.paragraphs.get(j - 2).dup().add(d2.paragraphs.get(j - 1));
+            } else {
+                p2 = null;
+            }
+
+            if (di == 1 && dj == 1) {
+                dmin = paragraph_distances.get(i - 1, j - 1) + paragraph_distance(p1, p2, custom, log) + SUBSTITUTION;
+            } else if (di == 1 && dj == 0) {
+                dmin = paragraph_distances.get(i - 1, j) + paragraph_distance(p1, p2, custom,log) + DELETION;
+            } else if (di == 0 && dj == 2) {
+                dmin = paragraph_distances.get(i, j - 1) + paragraph_distance(p1, p2, custom,log) + INSERTION;
+            } else if (di == 2 && dj == 1) {
+                dmin = paragraph_distances.get(i - 2, j - 1) + paragraph_distance(p1, p2, custom, log) + CONTRACTION;
+            } else if (di == 1 && dj == 2) {
+                dmin = paragraph_distances.get(i - 1, j - 2) + paragraph_distance(p1, p2, custom, log) + EXPANSION;
+            } else if (di == 2 && dj == 2) {
+                dmin = paragraph_distances.get(i - 2, j - 2) + paragraph_distance(p1, p2, custom, log) + MELDING;
+            }
+
+            if (dmin == Integer.MAX_VALUE) {
+                paragraph_distances.set(i, j, 0);
+            } else {
+                paragraph_distances.set(i, j, dmin);
+            }
+
+            System.out.println("" + i + "-" + j + " [" + dmin + "]");
+
+            pl = cl;
+            pr = cr;
+        }
+    }
+
+    public void showBestAlignments() {
+        int cl = -1;
+        int cr = -1;
         Alignment al = null;
-        for(int num = paragraph_alignments.size()-1;num>=0;--num) {
+        for (int num = paragraph_alignments.size() - 1; num >= 0; --num) {
             al = paragraph_alignments.get(num);
-            if(al.check(cl, cr) || cl < 0) {
+            if (al.check(cl, cr) || cl < 0) {
                 cl = al.getCurrentLeft();
                 cr = al.getCurrentRight();
-                System.out.println(""+cl+"-"+cr+" ["+al.getDistance()+"]");
+                System.out.println("" + cl + "-" + cr + " [" + al.getDistance() + "]");
                 cl = al.getPreviousLeft();
                 cr = al.getPreviousRight();
             }
         }
-        System.out.println(""+cl+"-"+cr);
+        System.out.println("" + cl + "-" + cr);
     }
 
     public void paragraphDistance(boolean custom) {
@@ -177,20 +258,21 @@ public class DocumentAligner {
                     continue;
                 }
 
-                computeParagraphDistance(d1, d2,custom);
+                computeParagraphDistance(d1, d2, custom);
             }
         }
 
     }
 
     private class Alignment {
+
         int current_left;
         int current_right;
         int previous_left;
         int previous_right;
         int distance;
 
-        public Alignment(int cl, int cr,int pl,int pr,int d) {
+        public Alignment(int cl, int cr, int pl, int pr, int d) {
             current_left = cl;
             current_right = cr;
             previous_left = pl;
@@ -198,16 +280,29 @@ public class DocumentAligner {
             distance = d;
         }
 
-        public boolean check(int l,int r) {
+        public boolean check(int l, int r) {
             return ((l == current_left) && (r == current_right));
         }
-        
-        public int getCurrentLeft() { return current_left; }
-        public int getCurrentRight() { return current_right; }
-        public int getPreviousLeft() { return previous_left; }
-        public int getPreviousRight() { return previous_right; }
-        public int getDistance() { return distance; }
 
+        public int getCurrentLeft() {
+            return current_left;
+        }
+
+        public int getCurrentRight() {
+            return current_right;
+        }
+
+        public int getPreviousLeft() {
+            return previous_left;
+        }
+
+        public int getPreviousRight() {
+            return previous_right;
+        }
+
+        public int getDistance() {
+            return distance;
+        }
     }
 
     private class Distances {
@@ -232,54 +327,72 @@ public class DocumentAligner {
         }
     }
 
-    private void computeParagraphDistance(Document d1, Document d2,boolean custom) {
+    private void computeParagraphDistance(Document d1, Document d2, boolean custom) {
         int i = 0, j = 0;
         paragraph_distances = new Distances();
         paragraph_alignments = new ArrayList<Alignment>();
-        for(i=-1;i<d1.paragraphs.size();++i) {
-            for(j=-1;j<d2.paragraphs.size();++j)
-                if(i<=0 || j<=0)
+        for (i = -1; i < d1.paragraphs.size(); ++i) {
+            for (j = -1; j < d2.paragraphs.size(); ++j) {
+                if (i <= 0 || j <= 0) {
                     paragraph_distances.set(i, j, 0);
+                }
+            }
         }
         int dmin = Integer.MAX_VALUE;
-        FingerPrint p1=null, p2=null, p3=null, p4=null;
-        for (i=0;i<=d1.paragraphs.size();++i) {
-            for (j=0;j<=d2.paragraphs.size();++j) {
+        FingerPrint p1 = null, p2 = null, p3 = null, p4 = null;
+        for (i = 0; i <= d1.paragraphs.size(); ++i) {
+            for (j = 0; j <= d2.paragraphs.size(); ++j) {
 
-                if(i>0) p1 = d1.paragraphs.get(i-1); else p1 = null;
-                if(j>0) p2 = d2.paragraphs.get(j-1); else p2 = null;
-                if(i>1) p3 = d1.paragraphs.get(i-2).dup().add(p1); else p3 = null;
-                if(j>1) p4 = d2.paragraphs.get(j-2).dup().add(p2); else p4 = null;
+                if (i > 0) {
+                    p1 = d1.paragraphs.get(i - 1);
+                } else {
+                    p1 = null;
+                }
+                if (j > 0) {
+                    p2 = d2.paragraphs.get(j - 1);
+                } else {
+                    p2 = null;
+                }
+                if (i > 1) {
+                    p3 = d1.paragraphs.get(i - 2).dup().add(p1);
+                } else {
+                    p3 = null;
+                }
+                if (j > 1) {
+                    p4 = d2.paragraphs.get(j - 2).dup().add(p2);
+                } else {
+                    p4 = null;
+                }
                 // opcio 1-1
-                int dist11 = (i>0 && j > 0) ?
-                    paragraph_distances.get(i - 1, j - 1) + paragraph_distance(p1, p2, custom) + SUBSTITUTION :
-                    Integer.MAX_VALUE;
+                int dist11 = (i > 0 && j > 0)
+                        ? paragraph_distances.get(i - 1, j - 1) + paragraph_distance(p1, p2, custom) + SUBSTITUTION
+                        : Integer.MAX_VALUE;
 
                 // opcio 1-0
-                int dist10 = (i>0) ?
-                    paragraph_distances.get(i - 1, j)+ paragraph_distance(p1, null, custom) + DELETION :
-                    Integer.MAX_VALUE;
+                int dist10 = (i > 0)
+                        ? paragraph_distances.get(i - 1, j) + paragraph_distance(p1, null, custom) + DELETION
+                        : Integer.MAX_VALUE;
 
                 // opcio 0-1
-                int dist01 = (j>0) ?
-                    paragraph_distances.get(i, j - 1) + paragraph_distance(null, p2, custom) + INSERTION :
-                    Integer.MAX_VALUE;
+                int dist01 = (j > 0)
+                        ? paragraph_distances.get(i, j - 1) + paragraph_distance(null, p2, custom) + INSERTION
+                        : Integer.MAX_VALUE;
 
                 // opcio 2-1
-                int dist21 = (i>1 && j>0) ?
-                    paragraph_distances.get(i - 2, j - 1)+ paragraph_distance(p3, p2, custom) + CONTRACTION :
-                    Integer.MAX_VALUE;
+                int dist21 = (i > 1 && j > 0)
+                        ? paragraph_distances.get(i - 2, j - 1) + paragraph_distance(p3, p2, custom) + CONTRACTION
+                        : Integer.MAX_VALUE;
 
                 // opcio 1-2
-                int dist12 = (i>0 && j>1) ?
-                    paragraph_distances.get(i - 1, j - 2) + paragraph_distance(p1, p4, custom) + EXPANSION :
-                    Integer.MAX_VALUE;
+                int dist12 = (i > 0 && j > 1)
+                        ? paragraph_distances.get(i - 1, j - 2) + paragraph_distance(p1, p4, custom) + EXPANSION
+                        : Integer.MAX_VALUE;
 
                 // opcio 2-2
-                int dist22 = (i>1 && j > 1) ?
-                    paragraph_distances.get(i - 2, j - 2) + paragraph_distance(p3, p4, custom) + MELDING:
-                    Integer.MAX_VALUE;
-                
+                int dist22 = (i > 1 && j > 1)
+                        ? paragraph_distances.get(i - 2, j - 2) + paragraph_distance(p3, p4, custom) + MELDING
+                        : Integer.MAX_VALUE;
+
                 dmin = dist11;
 
                 // find the minimum distance
@@ -302,35 +415,36 @@ public class DocumentAligner {
                 int left = -1;
                 int right = -1;
 
-                if(dmin == Integer.MAX_VALUE) {
+                if (dmin == Integer.MAX_VALUE) {
                     paragraph_distances.set(i, j, 0);
                 } else if (dmin == dist11) { // substitution
                     paragraph_distances.set(i, j, dmin);
-                    left = i-1;
-                    right = j-1;
+                    left = i - 1;
+                    right = j - 1;
                 } else if (dmin == dist10) { // deletion
                     paragraph_distances.set(i, j, dmin);
-                    left = i-1;
+                    left = i - 1;
                     right = j;
                 } else if (dmin == dist01) { // insertion
                     paragraph_distances.set(i, j, dmin);
                     left = i;
-                    right = j-1;
+                    right = j - 1;
                 } else if (dmin == dist12) { // expansion
                     paragraph_distances.set(i, j, dmin);
-                    left = i -1;
-                    right = j -2;
+                    left = i - 1;
+                    right = j - 2;
                 } else if (dmin == dist21) { // contraction
                     paragraph_distances.set(i, j, dmin);
                     left = i - 2;
-                    right = j -1;
+                    right = j - 1;
                 } else if (dmin == dist22) { // melding
                     paragraph_distances.set(i, j, dmin);
                     left = i - 2;
-                    right = j -2;
+                    right = j - 2;
                 }
-                if(left >= 0)
-                    paragraph_alignments.add(new Alignment(i,j,left,right,dmin));
+                if (left >= 0) {
+                    paragraph_alignments.add(new Alignment(i, j, left, right, dmin));
+                }
             }
             dmin = Integer.MAX_VALUE;
             j = 0;
@@ -384,26 +498,64 @@ public class DocumentAligner {
     }
 
     private int paragraph_distance(FingerPrint fp1, FingerPrint fp2, boolean custom) {
+        return paragraph_distance(fp1, fp2, custom, false);
+    }
+
+    private int paragraph_distance(FingerPrint fp1, FingerPrint fp2, boolean custom, boolean log) {
         int ret = 0;
 
-        if(fp1 == null && fp2 == null) return 0;
+        if (fp1 == null && fp2 == null) {
+            return 0;
+        }
 
-        if(fp1 == null) {
-            ret = normal_distance(0, fp2.chars);
-        } else if(fp2 == null) {
-            ret = normal_distance(fp1.chars,0);
+        if (custom) {
+            if (fp1 == null || fp2 == null) {
+                return 0;
+            }
+            /* double r = 0.85*normal_distance(fp1.chars, fp2.chars);
+            r += 0.05 * normal_distance(fp1.stop*100,fp2.stop*100);
+            r += 0.05 * normal_distance(fp1.words*20,fp2.words*20);
+            r += 0.05 * normal_distance(fp1.articles*100,fp2.articles*100); */
+            double r = 0;
+
+            // distancia manhattan
+            // diferenicia entre dos paràgrafs, lletra a lletra
+
+            Iterator<Character> lletres = fp1.bag.uniqueSet().iterator();
+            HashSet<Character> fetes = new HashSet<Character>();
+            while (lletres.hasNext()) {
+                Character c = lletres.next();
+                r += normal_distance(fp1.bag.getCount(c), fp2.bag.getCount(c));
+                fetes.add(c);
+            }
+
+            lletres = fp2.bag.uniqueSet().iterator();
+            while (lletres.hasNext()) {
+                Character c = lletres.next();
+                if (!fetes.contains(c)) {
+                    r += normal_distance(fp1.bag.getCount(c), fp2.bag.getCount(c));
+                    fetes.add(c);
+                }
+            }
+
+            if (log) {
+                for (Character c : fetes) {
+                    System.out.println("-" + c + ": " + fp1.bag.getCount(c) + "-" + fp2.bag.getCount(c));
+                }
+                System.out.println("----------" + Math.round(r - (fetes.size() * 2)) + "-----------");
+            }
+
+            ret = (int) Math.round(r - (fetes.size() * 2));
         } else {
-            if(custom) {
-                double r = 0.85*normal_distance(fp1.chars, fp2.chars);
-                r += 0.05 * normal_distance(fp1.stop*100,fp2.stop*100);
-                r += 0.05 * normal_distance(fp1.words*20,fp2.words*20);
-                r += 0.05 * normal_distance(fp1.articles*100,fp2.articles*100);
-                ret = (int)Math.round(r);
+
+            if (fp1 == null) {
+                ret = normal_distance(0, fp2.chars);
+            } else if (fp2 == null) {
+                ret = normal_distance(fp1.chars, 0);
             } else {
                 ret = normal_distance(fp1.chars, fp2.chars);
             }
         }
-
         return ret;
     }
 
@@ -472,7 +624,7 @@ public class DocumentAligner {
         }
 
         public String getId() {
-            return ""+fp.id;
+            return "" + fp.id;
         }
 
         @Override
@@ -492,6 +644,11 @@ public class DocumentAligner {
                 for (String wd : buffer) {
                     int vc = countVowels(wd);
                     int sz = wd.length();
+
+                    char[] ca = wd.toLowerCase().toCharArray();
+                    for (char c : ca) {
+                        fing.bag.add(c);
+                    }
 
                     fing.chars += sz;
                     fing.vowels += vc;
@@ -554,15 +711,17 @@ public class DocumentAligner {
         public int stop;
         public int id;
         public int articles;
+        public HashBag bag;
 
         public FingerPrint(int i) {
             pars = lines = words = chars = vowels = cons = stop = articles = 0;
+            bag = new HashBag();
             id = i;
         }
 
         @Override
         public String toString() {
-            return "[" + id + "] " + pars + "-" + lines + "-" + words + "-" 
+            return "[" + id + "] " + pars + "-" + lines + "-" + words + "-"
                     + chars + "-" + vowels + "-" + cons + "-" + stop + "-" + articles;
         }
 
@@ -573,6 +732,8 @@ public class DocumentAligner {
             this.vowels += fp.vowels;
             this.stop += fp.stop;
             this.articles += fp.articles;
+            this.lines += fp.lines;
+            this.bag.addAll(fp.bag);
             return this;
         }
 
@@ -585,38 +746,10 @@ public class DocumentAligner {
             tmp.vowels = this.vowels;
             tmp.stop = this.stop;
             tmp.articles = this.articles;
+            tmp.lines = this.lines;
+            tmp.bag.addAll(this.bag);
 
             return tmp;
-        }
-    }
-
-    private class Group {
-
-        Set<Integer> ids;
-        int id;
-
-        public Group(int i) {
-            id = i;
-            ids = new HashSet<Integer>();
-        }
-
-        public void add(int i) {
-            ids.add(i);
-        }
-
-        public boolean contains(int i) {
-            return ids.contains(i);
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder ret = new StringBuilder();
-
-            for (Integer i : ids) {
-                if(ret.length()>0) ret.append(","+i); else ret.append(i);
-            }
-
-            return ret.toString();
         }
     }
 }
