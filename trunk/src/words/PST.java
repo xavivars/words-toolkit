@@ -520,7 +520,7 @@ public class PST extends Model {
                     while ((word = txreader.nextWord()) != null) {
                         if(!calculat.contains(word)) {
                             calculat.add(word);
-                            cls.add(word,pst.wordProb(word)*(word.length()+1));
+                            cls.add(word,Math.pow(pst.wordProb(word),1.0/(word.length()+1)));
                         }
                     }
                     pst.printRanking(cls);

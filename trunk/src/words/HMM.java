@@ -425,7 +425,7 @@ public class HMM extends HMMPre {
                     while ((word = txreader.nextWord()) != null) {
                         if(!calculat.contains(word)) {
                             calculat.add(word);
-                            cls.add(word,hmm.wordProb(word)*(word.length()+1));
+                            cls.add(word,Math.pow(hmm.wordProb(word),1.0/(word.length()+1)));
                         }
                     }
                     hmm.printRanking(cls);
