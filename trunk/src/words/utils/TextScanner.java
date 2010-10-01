@@ -169,6 +169,47 @@ public class TextScanner {
         return res;
     }
 
+        /**
+     * Returns the next word in file.
+     * @return the next word in the scanned file
+     */
+    public String nextTxtWord() throws IOException {
+        String res = null;
+        while (res == null) {
+            if (buffer == null || pos == buffer.length) {
+                String line = reader.readLine();
+                if (line != null) {
+                    line = line.trim();
+                    if (line.length() > 0) {
+                        pos = 0;
+                        buffer = space.split(" " + line + " ", 0);
+                        // System.out.println(java.util.Arrays.toString(buffer));
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                String token = buffer[pos];
+                matcher = word.matcher(token);
+                if (matcher.matches()) {
+                    res = matcher.group(0);
+                } else if ((matcher = number.matcher(token)).matches()) {
+                    res = matcher.group(0);
+                } else if ((matcher = mixed.matcher(token)).matches()) {
+                    res = matcher.group(0);
+                    // System.err.println("MIXED(" + token + ")");
+                } else if ((matcher = abbrv.matcher(token)).matches()) {
+                    res = matcher.group(0);
+                    // System.err.println("ABBRV(" + token + ")");
+                } else if (token.length() > 0) {
+                    res = token;
+                }
+                ++pos;
+            }
+        }
+        return res;
+    }
+
     /**
      * Sample main.
      */
