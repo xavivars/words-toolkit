@@ -38,7 +38,7 @@ class XML2text extends DefaultHandler {
         Option note = parser.addBooleanOption('n', "note");
         Option header = parser.addBooleanOption('h', "header");
 
-        String[] ar_n = {"p", "abbr", "header", "docAuthor", "speaker"};
+        String[] ar_n = {"p", "l", "abbr", "header", "docAuthor", "speaker"};
         String[] ar_d = {"head"};
         newline = Arrays.asList(ar_n);
         dot = Arrays.asList(ar_d);
